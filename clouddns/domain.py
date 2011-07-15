@@ -68,7 +68,7 @@ class Domain(object):
 
     def list_records_info(self):
         resp = self._list_records_raw()
-        return json_loads(resp)['records']['record']
+        return json_loads(resp)['records']
 
     def _list_records_raw(self):
         """
