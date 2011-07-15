@@ -143,7 +143,7 @@ class Connection(object):
         if (response.status < 200) or (response.status > 299):
             response.read()
             raise ResponseError(response.status, response.reason)
-        return json_loads(response.read())['domains']['domain']
+        return json_loads(response.read())['domains']
 
     def get_domain(self, id=None, **dico):
         if id:
