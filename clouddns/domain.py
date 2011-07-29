@@ -100,19 +100,27 @@ class Domain(object):
         output = self.conn.wait_for_async_request(response)
         return output
 
-    def _record(self, name, data, type):
-        return """<record type="%s" data="%s" name="%s"/>""" % \
-            (type, data, name)
+    def _record(self, fields):
+        xml = """<record type="%s" data="%s" name="%s" """ % \
+            (fields['type'], fields['data'], fields['name'])
+        if fields['type'].upper() in ['MX', 'SRV']:
+            xml += """priority="%s" """ % fields['priority']
 
-    def create_record(self, name, data, type):
-        return self.create_records(([name, data, type],))[0]
+        xml += '/>'
+        return xml
+
+    def create_record(self, name=None, data=None, priority=None, type='A'):
+        record = {'name': name, 'data': data, 'type': type}
+        if priority:
+            record['priority'] = priority
+        return self.create_records([record])[0]
 
     def create_records(self, records):
         xml = \
             '<recordsList xmlns="http://docs.rackspacecloud.com/dns/api/v1.0">'
         ret = []
         for rec in records:
-            ret.append(self._record(*rec))
+            ret.append(self._record(rec))
         xml += "\n".join(ret)
         xml += "</recordsList>"
         response = self.conn.make_request('POST',

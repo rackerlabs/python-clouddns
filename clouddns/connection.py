@@ -127,7 +127,8 @@ class Connection(object):
 
         headers = {'Content-Length': str(len(data)),
                    'User-Agent': self.user_agent,
-                   'X-Auth-Token': self.token}
+                   'X-Auth-Token': self.token,
+                   'Content-Type': 'application/xml'}
         isinstance(hdrs, dict) and headers.update(hdrs)
 
         def retry_request():
