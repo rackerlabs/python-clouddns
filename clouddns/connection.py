@@ -206,7 +206,10 @@ class Connection(object):
             _output = response.read().strip()
             output = json.loads(_output)
             if output['status'] == 'COMPLETED':
-                return output['response']
+                try:
+                    return output['response']
+                except KeyError:
+                    return output
             if output['status'] == 'ERROR':
                 raise ResponseError(output['error']['code'],
                                     output['error']['details'])
