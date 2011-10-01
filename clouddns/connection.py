@@ -196,24 +196,25 @@ class Connection(object):
             response.read()
             raise ResponseError(response.status, response.reason)
         output = json.loads(response.read())
+        jobId = output['jobId']
         while True:
-            if 'callbackUrl' in output:
-                jobId = output['jobId']
-                response = self.make_request('GET', ['status', jobId])
-                if (response.status < 200) or (response.status > 299):
-                    response.read()
-                    raise ResponseError(response.status, response.reason)
-                _output = response.read().strip()
-                if not _output:
-                    return True
-                output = json.loads(_output)
-                time.sleep(1)
-                continue
-            elif 'DnsFault' in output:
-                raise ResponseError(output['DnsFault']['code'],
-                                    output['DnsFault']['message'])
-            else:
-                return output
+            response = self.make_request('GET', ['status', jobId],
+                                         parms=['showDetails=True']) 
+            if (response.status < 200) or (response.status > 299):
+                response.read()
+                raise ResponseError(response.status, response.reason)
+            _output = response.read().strip()
+            output = json.loads(_output)
+            if output['status'] == 'COMPLETED':
+                try:
+                    return output['response']
+                except KeyError:
+                    return output
+            if output['status'] == 'ERROR':
+                raise ResponseError(output['error']['code'],
+                                    output['error']['details'])
+            time.sleep(1)
+            continue
 
     def _domain(self, name, ttl, emailAddress):
         if not ttl >= 300:
