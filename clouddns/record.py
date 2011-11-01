@@ -7,6 +7,7 @@ class Record(object):
                  data=None,
                  ttl=1800,
                  name=None,
+                 priority=None,
                  type=None,
                  updated=None,
                  created=None,
@@ -14,6 +15,7 @@ class Record(object):
         self.domain = domain
         self.data = data
         self.name = name
+        self.priority = priority
         self.id = id
         self.ttl = ttl
         self.type = type
@@ -27,28 +29,31 @@ class Record(object):
     def update(self, data=None,
                name=None,
                ttl=None,
-               type=None,
+               priority=None,
+               type=None
                ):
         build_it = lambda k, v, d: ' %s="%s"' % (k, v and v or d)
         if data:
             self.data = data
         elif ttl:
             self.ttl = ttl
-        elif type:
-            self.type = type
         elif name:
             self.name = name
+        elif priority:
+            self.priority = priority
         xml = '<record '
-        xml += 'id="%s"' % (self.id)
         xml += build_it('name', name, self.name)
         xml += build_it('ttl', ttl, self.ttl)
         xml += build_it('data', data, self.data)
-        xml += build_it('type', data, self.type)
+        if self.type.upper() in ['MX', 'SRV']:
+            xml += build_it('priority', priority, self.priority)
+
         xml += ' />'
         response = self.domain.conn.make_request('PUT',
                                                  ["domains",
                                                   self.domain.id,
-                                                  "records", self.id, ""],
+                                                  "records",
+                                                  self.id],
                                                  data=xml)
         output = self.domain.conn.wait_for_async_request(response)
         return output
