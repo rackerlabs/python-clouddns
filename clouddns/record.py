@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 __author__ = "Chmouel Boudjnah <chmouel@chmouel.com>"
-
+import json
 
 class Record(object):
     def __init__(self, domain,
@@ -8,6 +8,8 @@ class Record(object):
                  ttl=1800,
                  name=None,
                  type=None,
+                 priority=None,
+                 comment="",
                  updated=None,
                  created=None,
                  id=None):
@@ -17,6 +19,8 @@ class Record(object):
         self.id = id
         self.ttl = ttl
         self.type = type
+        self.priority = priority
+        self.comment = comment
         self.updated = updated and \
             self.domain.conn.convert_iso_datetime(updated) or \
             None
@@ -25,31 +29,25 @@ class Record(object):
             None
 
     def update(self, data=None,
-               name=None,
                ttl=None,
-               type=None,
-               ):
-        build_it = lambda k, v, d: ' %s="%s"' % (k, v and v or d)
+               comment=None):
+        rec = {'name': self.name}
         if data:
             self.data = data
-        elif ttl:
+            rec['data'] = self.data
+        if ttl:
             self.ttl = ttl
-        elif type:
-            self.type = type
-        elif name:
-            self.name = name
-        xml = '<record '
-        xml += 'id="%s"' % (self.id)
-        xml += build_it('name', name, self.name)
-        xml += build_it('ttl', ttl, self.ttl)
-        xml += build_it('data', data, self.data)
-        xml += build_it('type', data, self.type)
-        xml += ' />'
+            rec['ttl'] = self.ttl
+        if comment:
+            self.comment = comment
+            rec['comment'] = self.comment
+        js = json.dumps(rec)
         response = self.domain.conn.make_request('PUT',
                                                  ["domains",
                                                   self.domain.id,
                                                   "records", self.id, ""],
-                                                 data=xml)
+                                                 data=js,
+                                                 hdrs={"Content-Type": "application/json"})
         output = self.domain.conn.wait_for_async_request(response)
         return output
 

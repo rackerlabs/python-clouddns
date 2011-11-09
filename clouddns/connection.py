@@ -216,14 +216,14 @@ class Connection(object):
             time.sleep(1)
             continue
 
-    def _domain(self, name, ttl, emailAddress):
+    def _domain(self, name, ttl, emailAddress, comment=""):
         if not ttl >= 300:
             raise Exception("Ttl is a minimun of 300 seconds")
-        s = '<domain name="%s" ttl="%s" emailAddress="%s"></domain>'
-        return s % (name, ttl, emailAddress)
+        s = '<domain name="%s" ttl="%s" emailAddress="%s" comment="%s"></domain>'
+        return s % (name, ttl, emailAddress, comment)
 
-    def create_domain(self, name, ttl, emailAddress):
-        domain = [name, ttl, emailAddress]
+    def create_domain(self, name, ttl, emailAddress, comment=""):
+        domain = [name, ttl, emailAddress, comment]
         return self.create_domains([domain])[0]
 
     def create_domains(self, domains):

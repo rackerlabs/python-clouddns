@@ -24,6 +24,7 @@ class Domain(object):
                  accountId=None,
                  ttl=None,
                  emailAddress=None,
+                 comment=None,
                  updated=None,
                  created=None,
                  nameservers=[],
@@ -34,6 +35,7 @@ class Domain(object):
         self.accountId = accountId
         self.ttl = ttl
         self.emailAddress = emailAddress
+        self.comment = comment
         self.updated = updated and \
             self.conn.convert_iso_datetime(updated) or \
             None
@@ -79,45 +81,50 @@ class Domain(object):
     def __str__(self):
         return self.name
 
-    def update(self, name=None,
+    def update(self,
                ttl=None,
-               emailAddress=None):
-        xml = '<domain xmlns="http://docs.rackspacecloud.com/dns/api/v1.0" '
-
-        if name:
-            xml += ' name="%s"' % (name)
-            self.name = name
+               emailAddress=None,
+               comment=None):
+        dom = {}
         if ttl:
-            xml += ' ttl="%s"' % (ttl)
             self.ttl = ttl
+            dom['ttl'] = self.ttl
         if emailAddress:
-            xml += ' emailAddress="%s"' % (emailAddress)
             self.emailAddress = emailAddress
-        xml += ' />'
+            dom['emailAddress'] = self.emailAddress
+        if comment: 
+            self.comment = comment
+            dom['comment'] = self.comment
+        js = json.dumps(dom)
 
         response = self.conn.make_request('PUT', ["domains", self.id],
-                                          data=xml)
+                                          data=js, hdrs={'Content-Type': 'application/json'})
         output = self.conn.wait_for_async_request(response)
         return output
 
-    def _record(self, name, data, type):
-        return """<record type="%s" data="%s" name="%s"/>""" % \
-            (type, data, name)
+    def _record(self, name, data, type, ttl=None, priority=None, comment=""):
+        rec = {'name': name,
+               'data': data,
+               'type': type,
+               'comment': comment}
+        if type.upper() in ('MX', 'SRV'):
+            rec['priority'] = priority
+        if ttl: rec['ttl'] = ttl
+        return rec 
 
-    def create_record(self, name, data, type):
-        return self.create_records(([name, data, type],))[0]
+    def create_record(self, name, data, type, ttl=None, priority=None, comment=""):
+        rec = [name, data, type, ttl, priority, comment]
+        return self.create_records((rec,))[0]
 
     def create_records(self, records):
-        xml = \
-            '<recordsList xmlns="http://docs.rackspacecloud.com/dns/api/v1.0">'
         ret = []
         for rec in records:
             ret.append(self._record(*rec))
-        xml += "\n".join(ret)
-        xml += "</recordsList>"
+        js = json.dumps({"records": ret})
         response = self.conn.make_request('POST',
                                           ['domains', self.id, 'records'],
-                                          data=xml)
+                                          data=js,
+                                          hdrs={'Content-Type': 'application/json'})
         output = self.conn.wait_for_async_request(response)
 
         ret = []
