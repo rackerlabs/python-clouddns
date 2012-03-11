@@ -14,7 +14,9 @@ A Rackspace Cloud username and API key are required and can be obtained
 from http://manage.rackspacecloud.com.  
 
 Domains and records can be found by specifying their name or id.  To
-enable debugging output, include the keyword argument debuglevel=1.  
+enable debugging output for the HTTP connection, include the keyword 
+argument debuglevel=1.  Additional debugging output is available by
+setting the 'PYTHON_CLOUDDNS_DEBUG' environment variable.
 
 List all domains::
 
