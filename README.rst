@@ -7,5 +7,87 @@
 :Licence:   BSD
 
 
-Not much documentation for now, you may want to dig into tests/t.py
-for now to see how to use the API.
+Usage
+=====
+
+A Rackspace Cloud username and API key are required and can be obtained
+from http://manage.rackspacecloud.com.  
+
+Domains and records can be found by specifying their name or id.  To
+enable debugging output, include the keyword argument debuglevel=1.  
+
+List all domains::
+
+    #!/usr/bin/env python
+    import clouddns
+    dns = clouddns.connection.Connection('username','apikey')
+
+    for domain in dns.get_domains():
+        print domain.name
+
+Create a new domain::
+
+    #!/usr/bin/env python
+    import clouddns
+    dns = clouddns.connection.Connection('username','apikey')
+
+    dns.create_domain(name='1234-example.com', ttl=300, 
+                      emailAddress='me@you.com')
+
+Update a domain::
+
+    #!/usr/bin/env python
+    import clouddns
+    dns = clouddns.connection.Connection('username','apikey')
+
+    domain = dns.get_domain(name='1234-example.com')
+    domain.update(ttl=600)
+
+Delete a domain::
+
+    #!/usr/bin/env python
+    import clouddns
+    dns = clouddns.connection.Connection('username','apikey')
+
+    domain = dns.get_domain(name='1234-example.com')
+    dns.delete_domain(domain.id)
+
+List all records for a domain::
+
+    #!/usr/bin/env python
+    import clouddns
+    dns = clouddns.connection.Connection('username','apikey')
+
+    domain = dns.get_domain(name='1234-example.com')
+    for record in domain.get_records():
+        print '(%s) %s -> %s' % (record.type, record.name, record.data)
+
+Create new record::
+
+    #!/usr/bin/env python
+    import clouddns
+    dns = clouddns.connection.Connection('username','apikey')
+
+    domain = dns.get_domain(name='1234-example.com')
+    domain.create_record('www.1234-example.com', '127.0.0.1', 'A')
+
+Update a record::
+
+    #!/usr/bin/env python
+    import clouddns
+    dns = clouddns.connection.Connection('username','apikey')
+
+    domain = dns.get_domain(name='1234-example.com')
+    record = domain.get_record(name='www.1234-example.com')
+    record.update(data='10.1.1.1', ttl=600)
+
+Delete a record::
+
+    #!/usr/bin/env python
+    import clouddns
+    dns = clouddns.connection.Connection('username','apikey')
+
+    domain = dns.get_domain(name='1234-example.com')
+    record = domain.get_record(name='www.1234-example.com')
+    domain.delete_record(record.id)
+  
