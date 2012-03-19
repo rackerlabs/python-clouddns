@@ -54,3 +54,9 @@ class InvalidUrl(Error):
     Not a valid url for use with this software.
     """
     pass
+
+class UnknownDomain(Error):
+    """
+    Raised when a domain name does not belong to this account.
+    """
+    pass

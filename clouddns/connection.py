@@ -15,7 +15,7 @@ import datetime
 import json
 
 from Queue import Queue, Empty, Full
-from errors import ResponseError
+from errors import ResponseError, UnknownDomain
 from httplib import HTTPSConnection, HTTPConnection, HTTPException
 from sys import version_info
 from urllib import quote
@@ -186,8 +186,7 @@ class Connection(object):
             for k in dico:
                 if k in domain and domain[k] == dico[k]:
                     return Domain(self, **domain)
-        #TODO:
-        raise Exception("Not found")
+        raise UnknownDomain("Not found")
 
     # Take a reponse parse it if there is asyncResponse and wait for
     # it (TODO: should offer to not)
