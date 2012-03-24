@@ -60,3 +60,15 @@ class UnknownDomain(Error):
     Raised when a domain name does not belong to this account.
     """
     pass
+
+class NotDomainOwner(Error):
+    """
+    Raised when a domain belongs to another account.
+    """
+    pass
+
+class DomainAlreadyExists(Error):
+    """
+    Raised with a domain already exists.
+    """
+    pass

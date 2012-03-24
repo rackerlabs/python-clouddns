@@ -15,7 +15,7 @@ import datetime
 import json
 
 from Queue import Queue, Empty, Full
-from errors import ResponseError, UnknownDomain
+from errors import ResponseError, UnknownDomain, NotDomainOwner, DomainAlreadyExists
 from httplib import HTTPSConnection, HTTPConnection, HTTPException
 from sys import version_info
 from urllib import quote
@@ -210,6 +210,12 @@ class Connection(object):
                 except KeyError:
                     return output
             if output['status'] == 'ERROR':
+                if (output['error']['code'] == 409 and 
+                    output['error']['details'] == 'Domain already exists'):
+                    raise DomainAlreadyExists
+                if (output['error']['code'] == 409 and 
+                    output['error']['details'].find('belongs to another owner')):
+                    raise NotDomainOwner
                 raise ResponseError(output['error']['code'],
                                     output['error']['details'])
             time.sleep(1)
