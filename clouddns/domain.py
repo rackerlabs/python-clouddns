@@ -158,10 +158,18 @@ class DomainResults(object):
         self.conn = conn
 
     def __getitem__(self, key):
+        kwargs = {}
+        if 'comment' in self._domains[key]:
+            kwargs['comment'] = self._domains[key]['comment']
+        else:
+            kwargs['comment'] = None
+        
         return Domain(self.conn,
                          self._domains[key]['name'],
                          self._domains[key]['id'],
-                         self._domains[key]['accountId'])
+                         self._domains[key]['accountId'],
+                         **kwargs)
+                         
 
     def __getslice__(self, i, j):
         return [Domain(self.conn, k['name'], k['id'], \
