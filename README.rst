@@ -96,5 +96,5 @@ Delete a record::
 GUI
 ===
 
-An web based GUI is available here: https://github.com/rackerhacker/rackspace-clouddns-gui
+A web based GUI is available here: https://github.com/rackerhacker/rackspace-clouddns-gui
 
