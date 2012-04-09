@@ -93,3 +93,8 @@ Delete a record::
     record = domain.get_record(name='www.1234-example.com')
     domain.delete_record(record.id)
   
+GUI
+===
+
+An web based GUI is available here: https://github.com/rackerhacker/rackspace-clouddns-gui
+
