@@ -257,6 +257,20 @@ class Connection(object):
                                       )
         return self.wait_for_async_request(response)
 
+    def import_domain(self, bind_zone_text):
+        xml = '<domains xmlns="http://docs.rackspacecloud.com/dns/api/v1.0">'
+        xml += '<domain contentType="BIND_9">'
+        xml += '<contents>%s</contents>' % bind_zone_text
+        xml += '</domain></domains>'
+        print xml
+        response = self.make_request('POST', ['domains', 'import'], data=xml)
+        output = self.wait_for_async_request(response)
+
+        ret = []
+        for domain in output['domains']:
+            ret.append(Domain(self, **domain))
+        return ret
+
 
 class ConnectionPool(Queue):
     """
