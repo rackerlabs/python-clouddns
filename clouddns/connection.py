@@ -257,6 +257,28 @@ class Connection(object):
                                       )
         return self.wait_for_async_request(response)
 
+    def import_domain(self, bind_zone):
+        """
+        Allows for a bind zone file to be imported in one operation.  The
+        bind_zone parameter can be a string or a file object.
+        """
+
+        if type(bind_zone) is file:
+            bind_zone = bind_zone.read()
+
+        xml = '<domains xmlns="http://docs.rackspacecloud.com/dns/api/v1.0">'
+        xml += '<domain contentType="BIND_9">'
+        xml += '<contents>%s</contents>' % bind_zone_text
+        xml += '</domain></domains>'
+
+        response = self.make_request('POST', ['domains', 'import'], data=xml)
+        output = self.wait_for_async_request(response)
+
+        ret = []
+        for domain in output['domains']:
+            ret.append(Domain(self, **domain))
+        return ret
+
 
 class ConnectionPool(Queue):
     """
