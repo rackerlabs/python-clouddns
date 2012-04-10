@@ -28,6 +28,7 @@ class Domain(object):
                  updated=None,
                  created=None,
                  nameservers=[],
+                 recordsList=[],
                  ):
         self.conn = connection
         self.name = name
@@ -43,6 +44,7 @@ class Domain(object):
             self.conn.convert_iso_datetime(created) or \
             None
         self.nameservers = nameservers
+        self.records = recordsList
 
     def get_record(self, id=None, **dico):
         if id:

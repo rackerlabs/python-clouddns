@@ -36,6 +36,15 @@ Create a new domain::
     dns.create_domain(name='1234-example.com', ttl=300, 
                       emailAddress='me@you.com')
 
+Import a domain from a BIND zone file or string::
+
+    #!/usr/bin/env python
+    import clouddns
+    dns = clouddns.connection.Connection('username','apikey')
+
+    with open('/tmp/example.com.zone', 'r') as f:
+        dns.import_domain(f)
+
 Update a domain::
 
     #!/usr/bin/env python
