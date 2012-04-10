@@ -262,7 +262,6 @@ class Connection(object):
         xml += '<domain contentType="BIND_9">'
         xml += '<contents>%s</contents>' % bind_zone_text
         xml += '</domain></domains>'
-        print xml
         response = self.make_request('POST', ['domains', 'import'], data=xml)
         output = self.wait_for_async_request(response)
 
