@@ -268,7 +268,7 @@ class Connection(object):
 
         xml = '<domains xmlns="http://docs.rackspacecloud.com/dns/api/v1.0">'
         xml += '<domain contentType="BIND_9">'
-        xml += '<contents>%s</contents>' % bind_zone_text
+        xml += '<contents>%s</contents>' % bind_zone
         xml += '</domain></domains>'
 
         response = self.make_request('POST', ['domains', 'import'], data=xml)
