@@ -192,8 +192,16 @@ class Connection(object):
     # it (TODO: should offer to not)
     def wait_for_async_request(self, response):
         if (response.status < 200) or (response.status > 299):
-            response.read()
-            raise ResponseError(response.status, response.reason)
+            _output = response.read().strip()
+            try:
+                output = json.loads(_output)
+            except ValueError:
+                output = None
+            api_reasons = ""
+            if output and 'validationErrors' in output:
+                for msg in output['validationErrors']['messages']:
+                    api_reasons += " (%s)" % msg
+            raise ResponseError(response.status, response.reason+api_reasons)
         output = json.loads(response.read())
         jobId = output['jobId']
         while True:
