@@ -53,6 +53,8 @@ class Connection(object):
         """
         self.connection_args = None
         self.connection = None
+        self.defaultAccountId = None
+        self.accountId = None
         self.token = None
         self.debuglevel = int(kwargs.get('debuglevel', 0))
         self.user_agent = kwargs.get('useragent', consts.user_agent)
@@ -106,6 +108,8 @@ class Connection(object):
                                               timeout=self.timeout)
         self.connection.set_debuglevel(self.debuglevel)
 
+	self.set_account()
+
     def make_request(self, method, path=[], data='', hdrs=None, parms=None):
         """
         Given a method (i.e. GET, PUT, POST, etc), a path, data, header and
@@ -158,6 +162,27 @@ class Connection(object):
             headers['X-Auth-Token'] = self.token
             response = retry_request()
         return response
+
+    def set_account(self, newAccountId=None):
+        """Handles setting of accountId for accessing other clients"""
+
+        # Split out the account ID off the DNS Management URL
+        (baseUri, sep , oldAccountId) = self.uri.rstrip('/').rpartition('/')
+
+        if not self.defaultAccountId: # First call, set default
+            self.defaultAccountId = oldAccountId
+
+        if newAccountId: # Set the new accountId
+            self.uri = baseUri + '/' + newAccountId
+            self.accountId = newAccountId
+        else: #set back to default
+            # This could be a self call, but for now we will just set the two vars
+            # self.set_account(self.defaultAccountId)
+            self.uri = baseUri + '/' + self.defaultAccountId
+            self.accountId = self.defaultAccountId
+
+    def get_accountId(self):
+        return self.accountId
 
     def get_domains(self):
         return DomainResults(self, self.list_domains_info())
