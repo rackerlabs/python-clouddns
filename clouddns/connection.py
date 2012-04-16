@@ -213,12 +213,33 @@ class Connection(object):
                     return Domain(self, **domain)
         raise UnknownDomain("Not found")
 
+    def get_domain_details(self, id=None):
+        """Get details on a particular domain"""
+        parms = { 'showRecords': 'false', 'showSubdomains': 'false' }
+        response = self.make_request('GET', ['domains', str(id)], parms=parms)
+
+        if (response.status < 200) or (response.status > 299):
+            response.read()
+            raise ResponseError(response.status, response.reason)
+        read_output = response.read()
+        domains = json.loads(read_output)
+
+        return Domain(self, **domains)
+
     # Take a reponse parse it if there is asyncResponse and wait for
     # it (TODO: should offer to not)
     def wait_for_async_request(self, response):
         if (response.status < 200) or (response.status > 299):
-            response.read()
-            raise ResponseError(response.status, response.reason)
+            _output = response.read().strip()
+            try:
+                output = json.loads(_output)
+            except ValueError:
+                output = None
+            api_reasons = ""
+            if output and 'validationErrors' in output:
+                for msg in output['validationErrors']['messages']:
+                    api_reasons += " (%s)" % msg
+            raise ResponseError(response.status, response.reason+api_reasons)
         output = json.loads(response.read())
         jobId = output['jobId']
         while True:
