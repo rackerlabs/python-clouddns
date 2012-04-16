@@ -188,6 +188,19 @@ class Connection(object):
                     return Domain(self, **domain)
         raise UnknownDomain("Not found")
 
+    def get_domain_details(self, id=None):
+        """Get details on a particular domain"""
+        parms = { 'showRecords': 'false', 'showSubdomains': 'false' }
+        response = self.make_request('GET', ['domains', str(id)], parms=parms)
+
+        if (response.status < 200) or (response.status > 299):
+            response.read()
+            raise ResponseError(response.status, response.reason)
+        read_output = response.read()
+        domains = json.loads(read_output)
+
+        return Domain(self, **domains)
+
     # Take a reponse parse it if there is asyncResponse and wait for
     # it (TODO: should offer to not)
     def wait_for_async_request(self, response):
