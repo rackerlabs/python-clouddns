@@ -101,6 +101,17 @@ Delete a record::
     domain = dns.get_domain(name='1234-example.com')
     record = domain.get_record(name='www.1234-example.com')
     domain.delete_record(record.id)
+
+Alternative Geographic Endpoints
+================================
+
+The examples above use the default authentication endpoint in the US. For UK
+accounts, you must override the authentication URL::
+
+    #!/usr/bin/env python
+    import clouddns
+    dns = clouddns.connection.Connection('username','apikey',
+                                         authurl=clouddb.consts.uk_authurl)
   
 GUI
 ===
