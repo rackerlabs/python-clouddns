@@ -111,8 +111,7 @@ accounts, you must override the authentication URL::
     #!/usr/bin/env python
     import clouddns
     dns = clouddns.connection.Connection('username','apikey',
-                                         authurl='https://lon.identity.api.rackspacecloud.com/v1.0/')
-
+                                         authurl=clouddb.consts.uk_authurl)
   
 GUI
 ===
