@@ -188,6 +188,16 @@ class Connection(object):
                     return Domain(self, **domain)
         raise UnknownDomain("Not found")
 
+    def get_zone(self, **dico):
+        filter_by_name_split = dico['name'].split('.')
+        ret = None
+        for i in range(len(filter_by_name_split),1,-1):
+            dico['name'] = ".".join(filter_by_name_split[-i:])
+            try: ret = self.get_domain(**dico)
+            except UnknownDomain: pass
+        if not ret: raise UnknownDomain
+        else: return ret
+
     def get_domain_details(self, id=None):
         """Get details on a particular domain"""
         parms = { 'showRecords': 'false', 'showSubdomains': 'false' }
