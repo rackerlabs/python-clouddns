@@ -117,6 +117,7 @@ class Connection(object):
                  (self.uri.rstrip('/'), '/'.join(
                    [unicode_quote(i) for i in path]))
         if isinstance(parms, dict) and parms:
+	    "parms is dict. lolz"
             query_args = \
                 ['%s=%s' % (quote(x),
                             quote(str(y))) for (x, y) in parms.items()]
@@ -124,7 +125,6 @@ class Connection(object):
             query_args = \
                 ["%s" % x for x in parms]
         path = '%s?%s' % (path, '&'.join(query_args))
-
         headers = {'Content-Length': str(len(data)),
                    'User-Agent': self.user_agent,
                    'X-Auth-Token': self.token}
@@ -159,13 +159,17 @@ class Connection(object):
             response = retry_request()
         return response
 
-    def get_domains(self):
-        return DomainResults(self, self.list_domains_info())
+    def get_domains(self,limit=None,offset=None):
+        return DomainResults(self, self.list_domains_info(limit=limit,offset=offset))
 
-    def list_domains_info(self, filter_by_name=None):
+    def list_domains_info(self, filter_by_name=None,offset=None,limit=None):
         parms = {}
         if filter_by_name:
             parms = {'name': filter_by_name}
+	if offset:
+	    parms['offset'] = offset
+	if limit:
+	    parms['limit'] = limit
         response = self.make_request('GET', ['domains'], parms=parms)
         if (response.status < 200) or (response.status > 299):
             response.read()
@@ -343,3 +347,4 @@ class ConnectionPool(Queue):
         except Full:
             del connobj
 # vim:set ai sw=4 ts=4 tw=0 expandtab:
+
