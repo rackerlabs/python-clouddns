@@ -15,12 +15,13 @@ import datetime
 import json
 
 from Queue import Queue, Empty, Full
-from errors import ResponseError, UnknownDomain, NotDomainOwner, DomainAlreadyExists
+from errors import ResponseError, UnknownDomain, \
+    NotDomainOwner, DomainAlreadyExists
 from httplib import HTTPSConnection, HTTPConnection, HTTPException
 from sys import version_info
 from urllib import quote
 
-from utils  import unicode_quote, parse_url, \
+from utils import unicode_quote, parse_url, \
     THTTPConnection, THTTPSConnection
 from domain import DomainResults, Domain
 from authentication import Authentication
@@ -64,7 +65,7 @@ class Connection(object):
             authurl = kwargs.get('authurl', consts.us_authurl)
             if username and api_key and authurl:
                 self.auth = Authentication(username, api_key, authurl=authurl,
-                            useragent=self.user_agent)
+                                           useragent=self.user_agent)
             else:
                 raise TypeError("Incorrect or invalid arguments supplied")
 
@@ -79,10 +80,10 @@ class Connection(object):
 
         if version_info[0] <= 2 and version_info[1] < 6:
             self.conn_class = self.connection_args[3] and THTTPSConnection or \
-                                                              THTTPConnection
+                THTTPConnection
         else:
             self.conn_class = self.connection_args[3] and HTTPSConnection or \
-                                                              HTTPConnection
+                HTTPConnection
         self.http_connect()
 
     def convert_iso_datetime(self, dt):
@@ -102,8 +103,8 @@ class Connection(object):
         Setup the http connection instance.
         """
         (host, port, self.uri, is_ssl) = self.connection_args
-        self.connection = self.conn_class(host, port=port, \
-                                              timeout=self.timeout)
+        self.connection = self.conn_class(host, port=port,
+                                          timeout=self.timeout)
         self.connection.set_debuglevel(self.debuglevel)
 
     def make_request(self, method, path=[], data='', hdrs=None, parms=None):
@@ -114,10 +115,8 @@ class Connection(object):
         """
         query_args = ""
         path = '/%s/%s' % \
-                 (self.uri.rstrip('/'), '/'.join(
-                   [unicode_quote(i) for i in path]))
+            (self.uri.rstrip('/'), '/'.join([unicode_quote(i) for i in path]))
         if isinstance(parms, dict) and parms:
-	    "parms is dict. lolz"
             query_args = \
                 ['%s=%s' % (quote(x),
                             quote(str(y))) for (x, y) in parms.items()]
@@ -147,8 +146,8 @@ class Connection(object):
                 sys.stderr.write("URL: %s" % (url))
                 sys.stderr.write("HEADERS: %s\n" % (str(headers)))
                 sys.stderr.write("DATA: %s\n" % (str(data)))
-                sys.stderr.write("curl -X '%s' -H 'X-Auth-Token: %s' %s %s" % \
-                                     (method, self.token, url, str(data)))
+                sys.stderr.write("curl -X '%s' -H 'X-Auth-Token: %s' %s %s" %
+                                 (method, self.token, url, str(data)))
             self.connection.request(method, path, data, headers)
             response = self.connection.getresponse()
         except (socket.error, IOError, HTTPException):
@@ -159,17 +158,18 @@ class Connection(object):
             response = retry_request()
         return response
 
-    def get_domains(self,limit=None,offset=None):
-        return DomainResults(self, self.list_domains_info(limit=limit,offset=offset))
+    def get_domains(self, limit=None, offset=None):
+        return DomainResults(self, self.list_domains_info(limit=limit,
+                                                          offset=offset))
 
-    def list_domains_info(self, filter_by_name=None,offset=None,limit=None):
+    def list_domains_info(self, filter_by_name=None, offset=None, limit=None):
         parms = {}
         if filter_by_name:
-            parms = {'name': filter_by_name}
-	if offset:
-	    parms['offset'] = offset
-	if limit:
-	    parms['limit'] = limit
+            parms['name'] = name
+        if offset:
+            parms['offset'] = offset
+        if limit:
+            parms['limit'] = limit
         response = self.make_request('GET', ['domains'], parms=parms)
         if (response.status < 200) or (response.status > 299):
             response.read()
@@ -194,7 +194,7 @@ class Connection(object):
 
     def get_domain_details(self, id=None):
         """Get details on a particular domain"""
-        parms = { 'showRecords': 'false', 'showSubdomains': 'false' }
+        parms = {'showRecords': 'false', 'showSubdomains': 'false'}
         response = self.make_request('GET', ['domains', str(id)], parms=parms)
 
         if (response.status < 200) or (response.status > 299):
@@ -218,12 +218,12 @@ class Connection(object):
             if output and 'validationErrors' in output:
                 for msg in output['validationErrors']['messages']:
                     api_reasons += " (%s)" % msg
-            raise ResponseError(response.status, response.reason+api_reasons)
+            raise ResponseError(response.status, response.reason + api_reasons)
         output = json.loads(response.read())
         jobId = output['jobId']
         while True:
             response = self.make_request('GET', ['status', jobId],
-                                         parms=['showDetails=True']) 
+                                         parms=['showDetails=True'])
             if (response.status < 200) or (response.status > 299):
                 response.read()
                 raise ResponseError(response.status, response.reason)
@@ -235,11 +235,12 @@ class Connection(object):
                 except KeyError:
                     return output
             if output['status'] == 'ERROR':
-                if (output['error']['code'] == 409 and 
+                if (output['error']['code'] == 409 and
                     output['error']['details'] == 'Domain already exists'):
                     raise DomainAlreadyExists
-                if (output['error']['code'] == 409 and 
-                    output['error']['details'].find('belongs to another owner')):
+                if (output['error']['code'] == 409 and
+                    output['error']['details'].find(
+                        'belongs to another owner')):
                     raise NotDomainOwner
                 raise ResponseError(output['error']['code'],
                                     output['error']['details'])
@@ -249,7 +250,8 @@ class Connection(object):
     def _domain(self, name, ttl, emailAddress, comment=""):
         if not ttl >= 300:
             raise Exception("Ttl is a minimun of 300 seconds")
-        s = '<domain name="%s" ttl="%s" emailAddress="%s" comment="%s"></domain>'
+        s = '<domain name="%s" ttl="%s" emailAddress="%s" \
+            comment="%s"></domain>'
         return s % (name, ttl, emailAddress, comment)
 
     def create_domain(self, name, ttl, emailAddress, comment=""):
@@ -279,7 +281,7 @@ class Connection(object):
         response = self.make_request('DELETE',
                                      ['domains'],
                                      parms=ret,
-                                      )
+                                     )
         return self.wait_for_async_request(response)
 
     def import_domain(self, bind_zone):
@@ -347,4 +349,3 @@ class ConnectionPool(Queue):
         except Full:
             del connobj
 # vim:set ai sw=4 ts=4 tw=0 expandtab:
-
