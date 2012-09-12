@@ -41,7 +41,7 @@ class Connection(object):
     @undocumented: _check_container_name
     """
 
-    def __init__(self, username=None, api_key=None, timeout=10, **kwargs):
+    def __init__(self, username=None, api_key=None, token=None, tenant_id=None, timeout=10, **kwargs):
         """
         Accepts keyword arguments for Rackspace Cloud username and api key.
         Optionally, you can omit these keywords and supply an
@@ -60,16 +60,30 @@ class Connection(object):
         self.timeout = timeout
 
         self.auth = 'auth' in kwargs and kwargs['auth'] or None
+        #Temporary hack - if we already have a token and tenant_id, skip auth process and jump straight to connecting
+        if token and tenant_id:
+            #TODO: Make sure token is valid for tenant_id, otherwise, throw back a 401
+            self.token = token
+            url = "https://dns.api.rackspacecloud.com/v1.0/%s" % tenant_id
+            self.connection_args = parse_url(url)
+            if version_info[0] <= 2 and version_info[1] < 6:
+                self.conn_class = self.connection_args[3] and THTTPSConnection or \
+                    THTTPConnection
+            else:
+                self.conn_class = self.connection_args[3] and HTTPSConnection or \
+                    HTTPConnection
 
-        if not self.auth:
-            authurl = kwargs.get('authurl', consts.us_authurl)
+            self.http_connect()
+        else:
+            if not self.auth:
+                authurl = kwargs.get('authurl', consts.us_authurl)
             if username and api_key and authurl:
                 self.auth = Authentication(username, api_key, authurl=authurl,
                                            useragent=self.user_agent)
             else:
                 raise TypeError("Incorrect or invalid arguments supplied")
 
-        self._authenticate()
+            self._authenticate()
 
     def _authenticate(self):
         """
@@ -349,4 +363,3 @@ class ConnectionPool(Queue):
         except Full:
             del connobj
 # vim:set ai sw=4 ts=4 tw=0 expandtab:
-
