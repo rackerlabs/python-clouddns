@@ -127,7 +127,8 @@ class Connection(object):
 
         headers = {'Content-Length': str(len(data)),
                    'User-Agent': self.user_agent,
-                   'X-Auth-Token': self.token}
+                   'X-Auth-Token': self.token,
+                   'Content-Type': 'application/xml'}
         isinstance(hdrs, dict) and headers.update(hdrs)
 
         def retry_request():
@@ -219,7 +220,7 @@ class Connection(object):
         jobId = output['jobId']
         while True:
             response = self.make_request('GET', ['status', jobId],
-                                         parms=['showDetails=True']) 
+                                         parms=['showDetails=True'])
             if (response.status < 200) or (response.status > 299):
                 response.read()
                 raise ResponseError(response.status, response.reason)
@@ -231,10 +232,10 @@ class Connection(object):
                 except KeyError:
                     return output
             if output['status'] == 'ERROR':
-                if (output['error']['code'] == 409 and 
+                if (output['error']['code'] == 409 and
                     output['error']['details'] == 'Domain already exists'):
                     raise DomainAlreadyExists
-                if (output['error']['code'] == 409 and 
+                if (output['error']['code'] == 409 and
                     output['error']['details'].find('belongs to another owner')):
                     raise NotDomainOwner
                 raise ResponseError(output['error']['code'],
