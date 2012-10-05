@@ -17,6 +17,7 @@ import json
 from Queue import Queue, Empty, Full
 from errors import ResponseError, UnknownDomain, NotDomainOwner, DomainAlreadyExists
 from httplib import HTTPSConnection, HTTPConnection, HTTPException
+from math import ceil
 from sys import version_info
 from urllib import quote
 
@@ -57,6 +58,7 @@ class Connection(object):
         self.debuglevel = int(kwargs.get('debuglevel', 0))
         self.user_agent = kwargs.get('useragent', consts.user_agent)
         self.timeout = timeout
+        self._total_domains = -1
 
         self.auth = 'auth' in kwargs and kwargs['auth'] or None
 
@@ -69,6 +71,12 @@ class Connection(object):
                 raise TypeError("Incorrect or invalid arguments supplied")
 
         self._authenticate()
+
+    @property
+    def total_domains(self):
+        if self._total_domains == -1:
+            self.list_domains_info(offset=0, limit=1)
+        return self._total_domains
 
     def _authenticate(self):
         """
@@ -160,29 +168,48 @@ class Connection(object):
             response = retry_request()
         return response
 
-    def get_domains(self):
-        return DomainResults(self, self.list_domains_info())
+    def get_domains(self, name=None, offset=0, limit=None):
+        return DomainResults(self, self.list_domains_info(name, 
+                                                          offset, 
+                                                          limit))
 
-    def list_domains_info(self, filter_by_name=None):
-        parms = {}
-        if filter_by_name:
-            parms = {'name': filter_by_name}
+    def list_domains_info(self, name=None, offset=0, limit=None):
+        if offset != 0:
+            if limit is None:
+                raise ValueError('limit must be specified when setting offset')
+            elif offset % limit > 0:
+                raise ValueError(
+                        'offset (%d) must be a multiple of limit (%d)' % 
+                        (offset, limit))
+        if limit is None:
+            limit = int(ceil(self.total_domains / 100.0) * 100)
+        domains = []
+        step = min(limit, 100)
+        for _offset in xrange(offset, offset + limit, step):
+            resp = self._list_domains_info_raw(name, _offset, step)
+            domains_info = json.loads(resp)
+            if 'totalEntries' in domains_info:
+                self._total_domains = domains_info['totalEntries']
+            domains.extend(domains_info['domains'])
+        return domains[:limit]
+    
+    def _list_domains_info_raw(self, name, offset, limit):
+        parms = {'offset': offset, 'limit': limit}
+        if name is not None:
+            parms.update({'name': name})
         response = self.make_request('GET', ['domains'], parms=parms)
         if (response.status < 200) or (response.status > 299):
             response.read()
             raise ResponseError(response.status, response.reason)
-        read_output = response.read()
-        return json.loads(read_output)['domains']
+        return response.read()
 
     def get_domain(self, id=None, **dico):
-        filter_by_name = ""
         if id:
             dico['id'] = id
         if 'name' in dico:
             dico['name'] = dico['name'].lower()
-            filter_by_name = dico['name']
 
-        domains = self.list_domains_info(filter_by_name=filter_by_name)
+        domains = self.list_domains_info(name=dico.get('name', None))
         for domain in domains:
             for k in dico:
                 if k in domain and domain[k] == dico[k]:

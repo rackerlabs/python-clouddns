@@ -62,30 +62,26 @@ class RecordResults(object):
     This class implements dictionary- and list-like interfaces.
     """
     def __init__(self, domain, records=None):
-        if records is None:
-            records = []
         self._names = []
-        self._records = []
-        for obj in records:
-                self._names.append(obj['name'])
-                self._records.append(obj)
+        self._records = records if records is not None else []
+        self._names = [r['name'] for r in self._records]
         self.domain = domain
 
     def __getitem__(self, key):
         return Record(self.domain, **(self._records[key]))
 
     def __getslice__(self, i, j):
-        return [Record(self.domain, record_id=k) \
+        return [Record(self.domain, **k) \
                     for k in self._records[i:j]]
 
     def __contains__(self, item):
-        return item in self._records
+        return item in self._names
 
     def __len__(self):
         return len(self._records)
 
     def __repr__(self):
-        return 'RecordResults: %s records' % len(self._records)
+        return 'RecordResults: %s records' % len(self)
     __str__ = __repr__
 
     def index(self, value, *args):
