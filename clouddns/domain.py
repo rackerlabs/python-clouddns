@@ -4,6 +4,7 @@ import json
 
 import consts
 from errors import InvalidDomainName, ResponseError
+from math import ceil
 from record import RecordResults, Record
 
 
@@ -45,6 +46,13 @@ class Domain(object):
             None
         self.nameservers = nameservers
         self.records = recordsList
+        self._total_records = -1
+    
+    @property
+    def total_records(self):
+        if self._total_records == -1:
+            self.list_records_info(offset=0, limit=1)
+        return self._total_records
 
     def get_record(self, id=None, **dico):
         if id:
@@ -59,19 +67,48 @@ class Domain(object):
         #TODO:
         raise Exception("Not found")
 
-    def get_records(self):
-        return RecordResults(self, self.list_records_info())
+    def get_records(self, type=None, name=None, data=None, offset=0, limit=None):
+        return RecordResults(self, self.list_records_info(type,
+                                                          name,
+                                                          data,
+                                                          offset,
+                                                          limit))
 
-    def list_records_info(self):
-        resp = self._list_records_raw()
-        return json.loads(resp)['records']
+    def list_records_info(self, type=None, 
+                                name=None, 
+                                data=None, 
+                                offset=0, 
+                                limit=None):
+        if offset != 0:
+            if limit is None:
+                raise ValueError('limit must be specified when setting offset')
+            elif offset % limit > 0:
+                raise ValueError(
+                        'offset (%d) must be a multiple of limit (%d)' % 
+                        (offset, limit))
+        if limit is None:
+            limit = int(ceil(self.total_records / 100.0) * 100)
+        if (name is not None or data is not None) and type is None:
+            raise ValueError('filtering by name or data requires type to be set')
+        records = []
+        step = min(limit, 100)
+        for _offset in xrange(offset, offset + limit, step):
+            resp = self._list_records_raw(type, name, data, _offset, step)
+            records_info = json.loads(resp)
+            if 'totalEntries' in records_info:
+                self._total_records = records_info['totalEntries']
+            records.extend(records_info['records'])
+        return records[:limit]
 
-    def _list_records_raw(self):
+    def _list_records_raw(self, type, name, data, offset, limit):
         """
         Returns a chunk list of records
         """
+        parms = {'offset': offset, 'limit': limit, 'type': type, 
+                 'name': name, 'data': data}
+        parms = dict(filter(lambda x: x[1] is not None, parms.items()))
         response = self.conn.make_request('GET', ["domains", self.id,
-                                                  "records"])
+                                                  "records"], parms=parms)
         if (response.status < 200) or (response.status > 299):
             response.read()
             raise ResponseError(response.status, response.reason)
@@ -154,11 +191,11 @@ class DomainResults(object):
 
     This class implements dictionary- and list-like interfaces.
     """
-    def __init__(self, conn, domains=list()):
-        self._domains = domains
-        self._names = [k['name'] for k in domains]
+    def __init__(self, conn, domains=None):
+        self._domains = domains if domains is not None else []
+        self._names = [k['name'] for k in self._domains]
         self.conn = conn
-
+    
     def __getitem__(self, key):
         kwargs = {}
         if 'comment' in self._domains[key]:
@@ -167,10 +204,10 @@ class DomainResults(object):
             kwargs['comment'] = None
         
         return Domain(self.conn,
-                         self._domains[key]['name'],
-                         self._domains[key]['id'],
-                         self._domains[key]['accountId'],
-                         **kwargs)
+                      self._domains[key]['name'],
+                      self._domains[key]['id'],
+                      self._domains[key]['accountId'],
+                      **kwargs)
                          
 
     def __getslice__(self, i, j):
@@ -181,7 +218,7 @@ class DomainResults(object):
         return item in self._names
 
     def __repr__(self):
-        return 'DomainResults: %s domains' % len(self._domains)
+        return 'DomainResults: %s domains' % len(self)
     __str__ = __repr__
 
     def __len__(self):
