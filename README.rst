@@ -11,7 +11,7 @@ Usage
 =====
 
 A Rackspace Cloud username and API key are required and can be obtained
-from http://manage.rackspacecloud.com.  
+from https://mycloud.rackspace.com.  
 
 Domains and records can be found by specifying their name or id.  To
 enable debugging output for the HTTP connection, include the keyword 
