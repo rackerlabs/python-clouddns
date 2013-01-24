@@ -184,7 +184,7 @@ class Connection(object):
         if limit is None:
             limit = int(ceil(self.total_domains / 100.0) * 100)
         domains = []
-        step = min(limit, 100)
+        step = min(limit, 100) if limit > 0 else 1
         for _offset in xrange(offset, offset + limit, step):
             resp = self._list_domains_info_raw(name, _offset, step)
             domains_info = json.loads(resp)
