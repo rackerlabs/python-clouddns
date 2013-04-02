@@ -21,7 +21,7 @@ from math import ceil
 from sys import version_info
 from urllib import quote
 
-from utils  import unicode_quote, parse_url, \
+from utils  import unicode_quote, parse_url, is_subdict, \
     THTTPConnection, THTTPSConnection
 from domain import DomainResults, Domain
 from authentication import Authentication
@@ -211,9 +211,8 @@ class Connection(object):
 
         domains = self.list_domains_info(name=dico.get('name', None))
         for domain in domains:
-            for k in dico:
-                if k in domain and domain[k] == dico[k]:
-                    return Domain(self, **domain)
+            if is_subdict(dico, domain):
+                return Domain(self, **domain)
         raise UnknownDomain("Not found")
 
     def get_domain_details(self, id=None):
