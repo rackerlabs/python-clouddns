@@ -49,6 +49,19 @@ def unicode_quote(s):
     else:
         return quote(str(s))
 
+def is_subdict(subdict, parentdict):
+    """
+    Utility function that returns True id `subdict` is a subset
+    of `parentdict`.
+    All the key->value pairs found in `subdict` should be found
+    and equal in `parentdict`
+    """
+    for key in subdict:
+        if key not in parentdict:
+            return False
+        if subdict[key] != parentdict[key]:
+            return False
+    return True
 
 class THTTPConnection(HTTPConnection):
     def __init__(self, host, port, timeout):

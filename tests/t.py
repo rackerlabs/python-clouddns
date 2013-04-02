@@ -86,26 +86,37 @@ def test():
     # Update Domain
     domain.update(ttl=ttl)
 
-    record = "test1.%s" % (DOMAIN)
+    record1 = "test1.%s" % (DOMAIN)
+    record2 = "test2.%s" % (DOMAIN)
     # Create Record
-    dbg("Creating Record: %s" % (record))
-    newRecord = \
-        domain.create_record(record, "127.0.0.1", "A")
+    dbg("Creating Record: %s" % (record1))
+    newRecord1 = \
+        domain.create_record(record1, "127.0.0.1", "A")
+    dbg("Creating Record: %s" % (record2))
+    newRecord2 = \
+        domain.create_record(record2, "127.0.0.2", "A")
 
     # Get Record by ID
-    dbg("Get Record By ID: %s" % (newRecord.id))
-    record = domain.get_record(newRecord.id)
-    assert(record.id == newRecord.id)
+    dbg("Get Record By ID: %s" % (newRecord1.id))
+    record = domain.get_record(newRecord1.id)
+    assert(record.id == newRecord1.id)
 
     # Get Record by name
-    dbg("Get Record By Name: %s" % (record))
+    dbg("Get Record By Name: %s" % (record1))
     record = domain.get_record(name=record.name)
-    assert(record.id == newRecord.id)
+    assert(record.id == newRecord1.id)
+
+    # Get Record by name and data
+    dbg("Get Record By Type And Name: %s" % (newRecord2))
+    record = domain.get_record(type=newRecord2.type,
+                               name=newRecord2.name)
+    assert(record.id == newRecord2.id)
 
     # Modify Record data
-    newRecord.update(data="127.0.0.2", ttl=1300)
+    newRecord1.update(data="127.0.1.1", ttl=1300)
 
-    # Delete Record
-    domain.delete_record(newRecord.id)
+    # Delete Records
+    domain.delete_record(newRecord1.id)
+    domain.delete_record(newRecord2.id)
 
 test()

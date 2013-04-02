@@ -6,6 +6,7 @@ import consts
 from errors import InvalidDomainName, ResponseError
 from math import ceil
 from record import RecordResults, Record
+from utils import is_subdict
 
 
 class Domain(object):
@@ -61,9 +62,8 @@ class Domain(object):
             dico['name'] = dico['name'].lower()
         records = self.list_records_info()
         for record in records:
-            for k in dico:
-                if k in record and record[k] == dico[k]:
-                    return Record(self, **record)
+            if is_subdict(dico, record):
+                return Record(self, **record)
         #TODO:
         raise Exception("Not found")
 
