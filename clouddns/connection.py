@@ -328,6 +328,27 @@ class Connection(object):
             ret.append(Domain(self, **domain))
         return ret
 
+    def get_limits(self):
+        """
+        Get rate and absolute limits
+        """
+        response = self.make_request("GET", ['limits'])
+        if 200 != response.status:
+            raise ResponseError(response.status, response.reason)
+        return json.loads(response.read())
+
+    def get_total_domain_count(self):
+        """
+        Get a count of total domains for the account
+        """
+        response = self.make_request("GET", ['domains'])
+        if 200 != response.status:
+            raise ResponseError(response.status, response.reason)
+        data = json.loads(response.read())
+        if data and 'totalEntries' in data:
+            return data.get('totalEntries')
+        return 0
+
 
 class ConnectionPool(Queue):
     """
