@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 __author__ = "Chmouel Boudjnah <chmouel@chmouel.com>"
 import json
+from time import sleep
 
 import consts
 from errors import InvalidDomainName, ResponseError
@@ -114,6 +115,29 @@ class Domain(object):
             raise ResponseError(response.status, response.reason)
         return response.read()
 
+    def export(self):
+      """
+      Exports a domain in BIND 9 format
+      """
+      response = self.conn.make_request('GET', ["domains", self.id,
+                                                  "export"])
+      if (response.status < 200) or (response.status > 299):
+          response.read()
+          raise ResponseError(response.status, response.reason)
+      async = json.loads(response.read())
+      return self._exportAsync(async['jobId'])
+
+    def _exportAsync(self, jobId):
+      response = self.conn.make_request('GET', ['status', jobId]).read()
+      async = json.loads(response)
+      if (async['status'] == 'INITIALIZED') or (async['status'] == 'RUNNING'):
+        sleep(0.5)
+        return self._exportAsync(jobId)
+      else: # ERROR or COMPLETED
+        completed = self.conn.make_request('GET', ['status', jobId],
+                                           parms={'showDetails': True})
+        return completed.read()
+        
     def __getitem__(self, key):
         return self.get_record(key)
 

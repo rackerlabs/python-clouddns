@@ -45,6 +45,15 @@ Import a domain from a BIND zone file or string::
     with open('/tmp/example.com.zone', 'r') as f:
         dns.import_domain(f)
 
+Export a domain to a BIND zone file::
+
+    #!/usr/bin/env python
+    import clouddns
+    dns = clouddns.connection.Connection('username','apikey')
+
+    domain = dns.get_domain(name='1234-example.com')
+    d.export()
+
 Update a domain::
 
     #!/usr/bin/env python
