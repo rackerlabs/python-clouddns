@@ -209,7 +209,7 @@ class Connection(object):
         if 'name' in dico:
             dico['name'] = dico['name'].lower()
 
-        domains = self.list_domains_info(name=dico.get('name', None))
+        domains = self.list_domains_info(name=dico.get('name', None), limit=1)
         for domain in domains:
             if is_subdict(dico, domain):
                 return Domain(self, **domain)
