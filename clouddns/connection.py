@@ -229,7 +229,7 @@ class Connection(object):
 
         return Domain(self, **domains)
 
-    # Take a reponse parse it if there is asyncResponse and wait for
+    # Take a response parse it if there is asyncResponse and wait for
     # it (TODO: should offer to not)
     def wait_for_async_request(self, response):
         if (response.status < 200) or (response.status > 299):
