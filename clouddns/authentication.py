@@ -2,7 +2,7 @@
 authentication operations
 
 Authentication instances are used to interact with the remote
-authentication service, retreiving storage system routing information
+authentication service, retrieving storage system routing information
 and session tokens.
 
 See COPYING for license information.
